@@ -6,6 +6,7 @@ import com.example.quoteservice.quote.dto.QuoteListItemResponse;
 import com.example.quoteservice.quote.dto.QuoteResponse;
 import com.example.quoteservice.quote.service.QuoteCommandService;
 import com.example.quoteservice.quote.service.QuoteQueryService;
+import com.example.quoteservice.quote.service.QuoteSearchService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,15 +17,17 @@ import java.util.List;
 public class QuoteController {
 
     private final QuoteCommandService quoteCommandService;
-
     private final QuoteQueryService quoteQueryService;
+    private final QuoteSearchService quoteSearchService;
 
     public QuoteController(
             QuoteCommandService quoteCommandService,
-            QuoteQueryService quoteQueryService
+            QuoteQueryService quoteQueryService,
+            QuoteSearchService quoteSearchService
     ) {
         this.quoteCommandService = quoteCommandService;
         this.quoteQueryService = quoteQueryService;
+        this.quoteSearchService = quoteSearchService;
     }
 
     @PostMapping
@@ -57,6 +60,6 @@ public class QuoteController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status
     ) {
-        return quoteQueryService.list(keyword, status);
+        return quoteSearchService.list(keyword, status);
     }
 }

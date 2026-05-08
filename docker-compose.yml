@@ -11,5 +11,18 @@ services:
     volumes:
       - quote_postgres_data:/var/lib/postgresql/data
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    container_name: quote-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - quote_elasticsearch_data:/usr/share/elasticsearch/data
+
 volumes:
   quote_postgres_data:
+  quote_elasticsearch_data:

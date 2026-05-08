@@ -20,10 +20,12 @@ public class QuoteCommandService {
 
     private final QuoteRepository quoteRepository;
     private final QuoteMapper quoteMapper;
+    private final QuoteIndexService quoteIndexService;
 
-    public QuoteCommandService(QuoteRepository quoteRepository, QuoteMapper quoteMapper) {
+    public QuoteCommandService(QuoteRepository quoteRepository, QuoteMapper quoteMapper, QuoteIndexService quoteIndexService) {
         this.quoteRepository = quoteRepository;
         this.quoteMapper = quoteMapper;
+        this.quoteIndexService = quoteIndexService;
     }
 
     @Transactional
@@ -42,6 +44,7 @@ public class QuoteCommandService {
                 .build();
 
         QuoteEntity saved = quoteRepository.save(quote);
+        quoteIndexService.syncQuote(saved.getId());
 
         return quoteMapper.toResponse(saved);
     }
@@ -56,6 +59,7 @@ public class QuoteCommandService {
         quote.setUpdatedAt(LocalDateTime.now());
 
         QuoteEntity savedQuote = quoteRepository.save(quote);
+        quoteIndexService.syncQuote(savedQuote.getId());
 
         return quoteMapper.toResponse(savedQuote);
     }
@@ -70,6 +74,7 @@ public class QuoteCommandService {
         quote.setUpdatedAt(LocalDateTime.now());
 
         QuoteEntity savedQuote = quoteRepository.save(quote);
+        quoteIndexService.syncQuote(savedQuote.getId());
 
         return quoteMapper.toResponse(savedQuote);
     }
@@ -107,7 +112,7 @@ public class QuoteCommandService {
 
     public void validaCanReject(QuoteEntity quote){
         if (quote.getStatus() != QuoteStatus.SUBMITTED){
-            throw  new BusinessException("Only SUBMITTED qupte can be rejected. Current status:" + quote.getStatus())
+            throw  new BusinessException("Only SUBMITTED qupte can be rejected. Current status:" + quote.getStatus());
         }
     }
 
