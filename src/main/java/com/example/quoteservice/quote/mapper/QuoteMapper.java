@@ -54,6 +54,7 @@ public class QuoteMapper {
 
         if (quote.getStatus() == QuoteStatus.SUBMITTED) {
             actions.add("APPROVE");
+            actions.add("REJECT");
         }
 
         return actions;

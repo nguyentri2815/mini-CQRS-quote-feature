@@ -42,6 +42,11 @@ public class QuoteController {
         return quoteCommandService.approve(id);
     }
 
+    @PostMapping("/{id}/reject")
+    public QuoteResponse reject(@PathVariable String id) {
+        return quoteCommandService.reject(id);
+    }
+
     @GetMapping("/{id}")
     public QuoteDetailResponse detail(@PathVariable String id) {
         return quoteQueryService.detail(id);

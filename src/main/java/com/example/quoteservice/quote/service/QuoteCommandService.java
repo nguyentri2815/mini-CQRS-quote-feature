@@ -48,36 +48,67 @@ public class QuoteCommandService {
 
     @Transactional
     public QuoteResponse submit(String id) {
-        QuoteEntity quote = findQuote(id);
+        QuoteEntity quote = findQuoteOrThrow(id);
 
-        if (quote.getStatus() != QuoteStatus.DRAFT) {
-            throw new BusinessException("Only DRAFT quote can be submitted");
-        }
+        validateCanSubmit(quote);
 
         quote.setStatus(QuoteStatus.SUBMITTED);
         quote.setUpdatedAt(LocalDateTime.now());
 
-        return quoteMapper.toResponse(quote);
+        QuoteEntity savedQuote = quoteRepository.save(quote);
+
+        return quoteMapper.toResponse(savedQuote);
     }
 
     @Transactional
     public QuoteResponse approve(String id) {
-        QuoteEntity quote = findQuote(id);
+        QuoteEntity quote = findQuoteOrThrow(id);
 
-        if (quote.getStatus() != QuoteStatus.SUBMITTED) {
-            throw new BusinessException("Only SUBMITTED quote can be approved");
-        }
+        validateCanApprove(quote);
 
         quote.setStatus(QuoteStatus.APPROVED);
         quote.setUpdatedAt(LocalDateTime.now());
 
+        QuoteEntity savedQuote = quoteRepository.save(quote);
+
+        return quoteMapper.toResponse(savedQuote);
+    }
+
+    @Transactional
+    public QuoteResponse reject(String id){
+        QuoteEntity quote = findQuoteOrThrow(id);
+
+        validaCanReject(quote);
+
+        quote.setStatus(QuoteStatus.REJECTED);
+        quote.setUpdatedAt(LocalDateTime.now());
+
+//        QuoteEntity savedQuote = quoteRepository.save(quote);
         return quoteMapper.toResponse(quote);
     }
 
     @Transactional(readOnly = true)
-    public QuoteEntity findQuote(String id) {
+    public QuoteEntity findQuoteOrThrow(String id) {
         return quoteRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Quote not found: " + id));
+    }
+
+    public void validateCanSubmit (QuoteEntity quote){
+        if (quote.getStatus() != QuoteStatus.DRAFT) {
+            throw new BusinessException("Only DRAFT quote can be submitted");
+        }
+    }
+
+    public void validateCanApprove (QuoteEntity quote){
+        if (quote.getStatus() != QuoteStatus.DRAFT) {
+            throw new BusinessException("Only DRAFT quote can be submitted");
+        }
+    }
+
+    public void validaCanReject(QuoteEntity quote){
+        if (quote.getStatus() != QuoteStatus.SUBMITTED){
+            throw  new BusinessException("Only SUBMITTED qupte can be rejected. Current status:" + quote.getStatus())
+        }
     }
 
     private String generateQuoteNumber() {
