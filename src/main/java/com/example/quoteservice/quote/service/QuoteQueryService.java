@@ -1,12 +1,15 @@
 package com.example.quoteservice.quote.service;
 
+import com.example.quoteservice.quote.common.exception.NotFoundException;
 import com.example.quoteservice.quote.dto.QuoteDetailResponse;
 import com.example.quoteservice.quote.dto.QuoteListItemResponse;
+import com.example.quoteservice.quote.entity.QuoteEntity;
 import com.example.quoteservice.quote.mapper.QuoteMapper;
 import com.example.quoteservice.quote.model.Quote;
 import com.example.quoteservice.quote.model.QuoteStatus;
-import com.example.quoteservice.quote.service.QuoteCommandService;
+import com.example.quoteservice.quote.repository.QuoteRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Comparator;
@@ -15,36 +18,37 @@ import java.util.List;
 @Service
 public class QuoteQueryService {
 
-    private final QuoteCommandService quoteCommandService;
-
+    private final QuoteRepository quoteRepository;
     private final QuoteMapper quoteMapper;
 
     public QuoteQueryService(
-            QuoteCommandService quoteCommandService,
+            QuoteRepository quoteRepository,
             QuoteMapper quoteMapper
     ) {
-        this.quoteCommandService = quoteCommandService;
+        this.quoteRepository = quoteRepository;
         this.quoteMapper = quoteMapper;
     }
 
+    @Transactional(readOnly = true)
     public QuoteDetailResponse detail(String id) {
-        Quote quote = quoteCommandService.findQuote(id);
+        QuoteEntity quote = quoteRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Quote not found: " + id));
 
         return quoteMapper.toDetailResponse(quote);
     }
 
+    @Transactional(readOnly = true)
     public List<QuoteListItemResponse> list(String keyword, String status) {
-        return quoteCommandService.getQuoteStore()
-                .values()
+        return quoteRepository.findAll()
                 .stream()
                 .filter(quote -> matchKeyword(quote, keyword))
                 .filter(quote -> matchStatus(quote, status))
-                .sorted(Comparator.comparing(Quote::getCreatedAt).reversed())
+                .sorted(Comparator.comparing(QuoteEntity::getCreatedAt).reversed())
                 .map(quoteMapper::toListItemResponse)
                 .toList();
     }
 
-    private boolean matchKeyword(Quote quote, String keyword) {
+    private boolean matchKeyword(QuoteEntity quote, String keyword) {
         if (!StringUtils.hasText(keyword)) {
             return true;
         }
@@ -56,7 +60,7 @@ public class QuoteQueryService {
                 || quote.getProductCode().toLowerCase().contains(lowerKeyword);
     }
 
-    private boolean matchStatus(Quote quote, String status) {
+    private boolean matchStatus(QuoteEntity quote, String status) {
         if (!StringUtils.hasText(status)) {
             return true;
         }
