@@ -6,6 +6,7 @@ import com.example.quoteservice.quote.dto.QuoteCreateRequest;
 import com.example.quoteservice.quote.dto.QuoteResponse;
 import com.example.quoteservice.quote.entity.QuoteEntity;
 import com.example.quoteservice.quote.mapper.QuoteMapper;
+import com.example.quoteservice.quote.messaging.QuoteSyncPublisher;
 import com.example.quoteservice.quote.model.QuoteStatus;
 import com.example.quoteservice.quote.repository.QuoteRepository;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,12 +21,16 @@ public class QuoteCommandService {
 
     private final QuoteRepository quoteRepository;
     private final QuoteMapper quoteMapper;
-    private final QuoteIndexService quoteIndexService;
+    private final QuoteSyncPublisher quoteSyncPublisher;
 
-    public QuoteCommandService(QuoteRepository quoteRepository, QuoteMapper quoteMapper, QuoteIndexService quoteIndexService) {
+    public QuoteCommandService(
+            QuoteRepository quoteRepository,
+            QuoteMapper quoteMapper,
+            QuoteSyncPublisher quoteSyncPublisher
+    ) {
         this.quoteRepository = quoteRepository;
         this.quoteMapper = quoteMapper;
-        this.quoteIndexService = quoteIndexService;
+        this.quoteSyncPublisher = quoteSyncPublisher;
     }
 
     @Transactional
@@ -43,10 +48,10 @@ public class QuoteCommandService {
                 .updatedAt(now)
                 .build();
 
-        QuoteEntity saved = quoteRepository.save(quote);
-        quoteIndexService.syncQuote(saved.getId());
+        QuoteEntity savedQuote = quoteRepository.save(quote);
+        quoteSyncPublisher.publishSyncEs(savedQuote.getId(), "CREATED");
 
-        return quoteMapper.toResponse(saved);
+        return quoteMapper.toResponse(savedQuote);
     }
 
     @Transactional
@@ -59,7 +64,7 @@ public class QuoteCommandService {
         quote.setUpdatedAt(LocalDateTime.now());
 
         QuoteEntity savedQuote = quoteRepository.save(quote);
-        quoteIndexService.syncQuote(savedQuote.getId());
+        quoteSyncPublisher.publishSyncEs(savedQuote.getId(), "SUBMITTED");
 
         return quoteMapper.toResponse(savedQuote);
     }
@@ -74,7 +79,7 @@ public class QuoteCommandService {
         quote.setUpdatedAt(LocalDateTime.now());
 
         QuoteEntity savedQuote = quoteRepository.save(quote);
-        quoteIndexService.syncQuote(savedQuote.getId());
+        quoteSyncPublisher.publishSyncEs(savedQuote.getId(), "APPROVED");
 
         return quoteMapper.toResponse(savedQuote);
     }
@@ -105,8 +110,8 @@ public class QuoteCommandService {
     }
 
     public void validateCanApprove (QuoteEntity quote){
-        if (quote.getStatus() != QuoteStatus.DRAFT) {
-            throw new BusinessException("Only DRAFT quote can be submitted");
+        if (quote.getStatus() != QuoteStatus.SUBMITTED) {
+            throw new BusinessException("Only SUBMITTED quote can be approved");
         }
     }
 

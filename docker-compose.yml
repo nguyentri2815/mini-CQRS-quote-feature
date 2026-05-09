@@ -22,7 +22,16 @@ services:
       - "9200:9200"
     volumes:
       - quote_elasticsearch_data:/usr/share/elasticsearch/data
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: quote-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - quote_rabbitmq_data:/var/lib/rabbitmq
 
 volumes:
   quote_postgres_data:
   quote_elasticsearch_data:
+  quote_rabbitmq_data:
