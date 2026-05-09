@@ -1,6 +1,6 @@
 package com.example.quoteservice.quote.service;
 
-import com.example.quoteservice.quote.common.exception.NotFoundException;
+import com.example.quoteservice.common.exception.NotFoundException;
 import com.example.quoteservice.quote.document.QuoteDocument;
 import com.example.quoteservice.quote.entity.QuoteEntity;
 import com.example.quoteservice.quote.mapper.QuoteSearchMapper;

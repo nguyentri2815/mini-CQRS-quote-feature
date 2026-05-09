@@ -1,4 +1,4 @@
-package com.example.quoteservice.quote.common.exception;
+package com.example.quoteservice.common.exception;
 
 public class BusinessException extends RuntimeException{
     public BusinessException(String message){

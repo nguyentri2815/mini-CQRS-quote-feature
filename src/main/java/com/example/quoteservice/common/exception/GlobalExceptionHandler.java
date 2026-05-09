@@ -1,4 +1,4 @@
-package com.example.quoteservice.quote.common.exception;
+package com.example.quoteservice.common.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

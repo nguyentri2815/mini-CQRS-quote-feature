@@ -1,4 +1,4 @@
-package com.example.quoteservice.quote.common.exception;
+package com.example.quoteservice.common.exception;
 
 public class NotFoundException extends RuntimeException{
     public  NotFoundException(String message){

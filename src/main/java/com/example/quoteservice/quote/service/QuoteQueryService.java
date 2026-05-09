@@ -1,17 +1,18 @@
 package com.example.quoteservice.quote.service;
 
-import com.example.quoteservice.quote.common.exception.NotFoundException;
+import com.example.quoteservice.common.exception.NotFoundException;
 import com.example.quoteservice.quote.dto.QuoteDetailResponse;
 import com.example.quoteservice.quote.dto.QuoteListItemResponse;
 import com.example.quoteservice.quote.entity.QuoteEntity;
 import com.example.quoteservice.quote.mapper.QuoteMapper;
-import com.example.quoteservice.quote.model.Quote;
 import com.example.quoteservice.quote.model.QuoteStatus;
 import com.example.quoteservice.quote.repository.QuoteRepository;
+import com.example.quoteservice.workflow.service.WorkflowService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -20,13 +21,16 @@ public class QuoteQueryService {
 
     private final QuoteRepository quoteRepository;
     private final QuoteMapper quoteMapper;
+    private final WorkflowService workflowService;
 
     public QuoteQueryService(
             QuoteRepository quoteRepository,
-            QuoteMapper quoteMapper
+            QuoteMapper quoteMapper,
+            WorkflowService workflowService
     ) {
         this.quoteRepository = quoteRepository;
         this.quoteMapper = quoteMapper;
+        this.workflowService = workflowService;
     }
 
     @Transactional(readOnly = true)
@@ -34,7 +38,7 @@ public class QuoteQueryService {
         QuoteEntity quote = quoteRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Quote not found: " + id));
 
-        return quoteMapper.toDetailResponse(quote);
+        return toDetailResponse(quote);
     }
 
     @Transactional(readOnly = true)
@@ -72,4 +76,34 @@ public class QuoteQueryService {
             return false;
         }
     }
+
+    private QuoteDetailResponse toDetailResponse(QuoteEntity quote) {
+        return new QuoteDetailResponse(
+                quote.getId(),
+                quote.getQuoteNumber(),
+                quote.getCustomerName(),
+                quote.getProductCode(),
+                quote.getPremium(),
+                quote.getStatus().name(),
+                quote.getCreatedAt(),
+                quote.getUpdatedAt(),
+                buildAvailableActions(quote)
+        );
+    }
+
+    private List<String> buildAvailableActions(QuoteEntity quote) {
+        List<String> actions = new ArrayList<>();
+
+        if (quote.getStatus() == QuoteStatus.DRAFT) {
+            actions.add("SUBMIT");
+        }
+
+        if (quote.getStatus() == QuoteStatus.SUBMITTED
+                && workflowService.hasOpenApproveQuoteTask(quote.getId())) {
+            actions.add("APPROVE");
+        }
+
+        return actions;
+    }
+
 }
